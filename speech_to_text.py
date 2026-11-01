@@ -20,8 +20,14 @@ DEFAULT_BEAM_SIZE = 3
 
 
 def to_gloss_sequence(text):
-    """Format transcription text as a space-separated lexical gloss sequence."""
+    """Format transcription text as a basic ASL-style lexical gloss sequence."""
     glosses = re.findall(r"[A-Za-z0-9]+(?:'[A-Za-z0-9]+)?", text.upper())
+    wh_words = {"WHERE", "WHAT", "WHEN", "WHO", "WHY", "HOW"}
+    if glosses and glosses[0] in wh_words:
+        question_word = glosses.pop(0)
+        if glosses and glosses[0] in {"IS", "ARE", "AM"}:
+            glosses.pop(0)
+        glosses.append(question_word)
     return " ".join(glosses)
 
 
@@ -146,15 +152,15 @@ def main():
         "--gpu",
         dest="use_gpu",
         action="store_true",
-        help="Use NVIDIA CUDA GPU with float16 inference (default).",
+        help="Use NVIDIA CUDA GPU with float16 inference.",
     )
     accelerator.add_argument(
         "--cpu",
         dest="use_gpu",
         action="store_false",
-        help="Use CPU int8 inference instead of the GPU.",
+        help="Use CPU int8 inference (default).",
     )
-    parser.set_defaults(use_gpu=True)
+    parser.set_defaults(use_gpu=False)
     parser.add_argument(
         "--threads",
         type=int,
